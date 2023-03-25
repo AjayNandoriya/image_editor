@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/opencv.js"></script>
+    <link rel="stylesheet" type="text/css" href="./css/main.css" media="screen" />
+</head>
+
+<body>
+    <div class="inputoutput">
+        <img id="imageSrc" alt="No Image" />
+        <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+      </div>
+    <div id="drawing_board">
+        <canvas id="board" style="height: 256px;width: 256px;"></canvas>
+        <select title="contourcolor" name="contourcolor" id="contourcolor">
+            <option value="gray">gray</option>
+            <option value="red">ref</option>
+            <option value="green">green</option>
+            <option value="blue">blue</option>
+        </select>
+        <textarea id="board_info" disabled></textarea>
+    </div>
+</body>
+<script src="./js/app.js"></script>
+
+</html>
