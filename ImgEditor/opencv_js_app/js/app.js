@@ -39,7 +39,16 @@ class DrawingBoard {
         this.draw = false;
         console.log(this.type);
         this.contours = [];
-        this.canvass = []
+        this.canvass = [];
+        this.mask_canvas = document.createElement('CANVAS');
+        this.mask_canvas.id = 'mask';
+        this.mask_canvas.height = H;
+        this.mask_canvas.width = W;
+        let ctx = this.mask_canvas.getContext("2d");
+        
+        // Now draw!
+        ctx.fillStyle = "rgb(2,2,2)";
+        ctx.fillRect(0, 0, this.mask_canvas.width, this.mask_canvas.height);
         for (let i = 0; i < this.type.length; i++) {
             this.contours.push([]);
             let canvas = document.createElement('CANVAS');
@@ -69,6 +78,12 @@ class DrawingBoard {
             let old = contour[contour.length - 1];
             this.drawline(this.canvas, old.x, old.y, x, y, color);
             this.drawline(this.canvass[this.type.selectedIndex], old.x, old.y, x, y, color);
+            if(this.type.selectedIndex == 0){
+                this.drawline(this.mask_canvas, old.x, old.y, x, y, "rgb(0,0,0)");
+            }
+            else if(this.type.selectedIndex == 1){
+                this.drawline(this.mask_canvas, old.x, old.y, x, y, "rgb(1,1,1)");
+            }
             contour.push({ x, y });
         }
 
@@ -115,20 +130,31 @@ class DrawingBoard {
         ctx.stroke();
     }
 
-    segment_image(main_canvas, fg_canvas, bg_canvas, out_canvas){
-        for (let i = 0; i < src.rows; i++) {
-            for (let j = 0; j < src.cols; j++) {
-                if (mask.ucharPtr(i, j)[0] == 0 || mask.ucharPtr(i, j)[0] == 2) {
-                    src.ucharPtr(i, j)[0] = 0;
-                    src.ucharPtr(i, j)[1] = 0;
-                    src.ucharPtr(i, j)[2] = 0;
-                }
-            }
-        }
-        cv.grabCut(main_canvas, mask, rect, bgdModel, fgdModel, 1, cv.GC_INIT_WITH_MASK);
+    segment_image(){
+        let main_img='imageSrc';
+        let fg_canvas_id='mask_0';
+        let bg_canvas_id='mask_1';
+        let out_canvas_id='boardOut';
+        let main_img_mat = cv.imread(main_img);
+        let dsize = new cv.Size(256, 256);
+        cv.resize(main_img_mat, main_img_mat, dsize, 0, 0, cv.INTER_AREA);
+
+        let mask = cv.imread(this.mask_canvas);
+        mask.convertTo(mask, cv.CV_8U, 100, 0);
+        cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY);
+        
+        cv.imshow(out_canvas_id, mask);
+        mask.delete();
+        main_img_mat.delete();
+        
+        // cv.grabCut(main_canvas, mask, rect, bgdModel, fgdModel, 1, cv.GC_INIT_WITH_MASK);
     }
 
 }
 
 let drawingBoard = new DrawingBoard('#drawing_board', '#board', '#contourcolor', '#board_info');
 loadImg();
+
+$('#segment').click(() =>{
+    drawingBoard.segment_image();
+}) ;
