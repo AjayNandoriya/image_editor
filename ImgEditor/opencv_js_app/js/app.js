@@ -166,7 +166,7 @@ class DrawingBoard {
     let bgdModel = new cv.Mat();
     let fgdModel = new cv.Mat();
     let rect = new cv.Rect(0, 0, 100, 100);
-    cv.grabCut(main_img_mat, mask, rect, bgdModel, fgdModel, 1, cv.GC_INIT_WITH_MASK);
+    cv.grabCut(main_img_mat, mask, rect, bgdModel, fgdModel, 10, cv.GC_INIT_WITH_MASK);
     
     
     // mask.convertTo(mask, cv.CV_8U, -1, 2);
