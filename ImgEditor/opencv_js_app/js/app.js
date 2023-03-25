@@ -166,18 +166,25 @@ class DrawingBoard {
     let bgdModel = new cv.Mat();
     let fgdModel = new cv.Mat();
     let rect = new cv.Rect(0, 0, 100, 100);
-    cv.grabCut(main_img_mat, mask, rect, bgdModel, fgdModel, 10, cv.GC_INIT_WITH_MASK);
-    
-    
+    cv.grabCut(
+      main_img_mat,
+      mask,
+      rect,
+      bgdModel,
+      fgdModel,
+      10,
+      cv.GC_INIT_WITH_MASK
+    );
+
     // mask.convertTo(mask, cv.CV_8U, -1, 2);
     mask.convertTo(mask, cv.CV_8U, 100, 0);
-
+    cv.cvtColor(main_img_mat, main_img_mat, cv.COLOR_RGB2GRAY);
+    cv.addWeighted(main_img_mat, 0.5, mask, 0.5, 1, mask);
     cv.imshow(out_canvas_id, mask);
     mask.delete();
     main_img_mat.delete();
     fg.delete();
     bg.delete();
-
   }
 }
 
