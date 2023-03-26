@@ -1,9 +1,9 @@
 function loadImg() {
   let imgElement = document.getElementById("imageSrc");
   let inputElement = document.getElementById("fileInput");
-  imgElement.onload = function () {
-    let mat = cv.imread(imgElement);
-  };
+  // imgElement.onload = function () {
+  //   let mat = cv.imread(imgElement);
+  // };
   inputElement.addEventListener(
     "change",
     (e) => {

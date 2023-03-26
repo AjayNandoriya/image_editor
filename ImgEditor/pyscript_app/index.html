@@ -8,46 +8,30 @@
     <title>Document</title>
     <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <script src="./js/opencv.js"></script>
 
 </head>
 
 <body>
-    <py-config>
-        packages = ["matplotlib", "pandas","numpy","opencv-python"]
+    <div class="inputoutput">
+        <img id="imageSrc" alt="No Image" style="display: none; "/>
+        <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+        <canvas id="board" style="display: none;height: 256px; width: 256px;;"></canvas>
+      </div>
+      <button id="readImg">Read Img</button>
+    <py-config  type="json">
+        {
+            "packages" : ["matplotlib", "pandas","numpy","opencv-python"],
+            "plugins" : ["./py/utils.py"],
+            "terminal" : true
+        }
     </py-config>
 
     <section class="pyscript">
         Hello world! <br>
         This is the current date and time, as computed by Python:
-        <py-script>
-            from datetime import datetime
-            now = datetime.now()
-            #display(now.strftime("%m/%d/%Y, %H:%M:%S"))
-
-            import matplotlib.pyplot as plt
-            import numpy as np
-            def plot():
-                plt.rcParams["figure.figsize"] = (22,20)
-                fig, ax = plt.subplots()
-                data = np.random.rand(100,100)
-                plt.imshow(data)
-                plt.title("Rating of ice cream flavours of your choice")
-                display(fig, target="graph-area", append=False)
-            plot()
-
-            import js
-            from pyodide.ffi import create_proxy
-
-            def select_flavour(event):
-                display(event.target.value,target="py_output", append=False)
-            ele_proxy = create_proxy(select_flavour)
-
-            flavour_elements = js.document.getElementsByName("flavour");
-            for ele in flavour_elements:
-                if ele.value == "ALL":
-                    ele.checked = True
-                    current_selected = ele.value
-                ele.addEventListener("change", ele_proxy)
+        <py-script src="./py/app.py">
+            
         </py-script>
     </section>
     <div id="input" style="margin: 20px;">
@@ -67,6 +51,9 @@
       </div>
       <textarea disabled id="py_output"></textarea>
     <div id="graph-area"></div>
+
+    <py-terminal></py-terminal>
 </body>
 
+<script src="js/app.js"></script>
 </html>
