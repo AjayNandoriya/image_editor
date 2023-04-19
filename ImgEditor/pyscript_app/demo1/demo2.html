@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <script defer src="https://cdn.plot.ly/plotly-2.10.1.min.js"></script>
+
+</head>
+
+<body>
+    <py-config  type="json">
+        {
+            "packages" : ["pandas","plotly", "Pillow"]
+        }
+    </py-config>
+    <label for="Upload a PNG image"></label><input type="file" id="file-upload-pillow">
+    <div id="output_upload_pillow"></div>
+    <py-script src="./py/image_upload_pillow.py"></py-script>
+</body>
+</html>

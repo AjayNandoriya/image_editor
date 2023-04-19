@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <script src="./js/opencv.js"></script>
+
+</head>
+
+<body>
+    <div class="inputoutput">
+        <img id="imageSrc" alt="No Image" style="display: none; "/>
+        <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+        <canvas id="board" style="display: none;height: 256px; width: 256px;;"></canvas>
+      </div>
+      <button id="readImg">Read Img</button>
+    <py-config  type="json">
+        {
+            "packages" : ["matplotlib", "pandas","numpy","opencv-python"],
+            "fetch": [{
+                "from" : "./py/",
+                "files": ["utils.py" ]
+              }]
+        }
+    </py-config>
+
+    <section class="pyscript">
+        Hello world! <br>
+        This is the current date and time, as computed by Python:
+        <py-script src="./py/app.py">
+            
+        </py-script>
+    </section>
+    <div id="input" style="margin: 20px;">
+        Select your 🍨 flavour: <br/>
+        <input type="radio" id="all" name="flavour" value="ALL">
+        <label for="all"> All 🍧</label>
+        <input type="radio" id="chocolate" name="flavour" value="COCOA">
+        <label for="chocolate"> Chocolate 🍫</label>
+        <input type="radio" id="cherrie" name="flavour" value="CHERRIES">
+        <label for="cherrie"> Cherries 🍒</label>
+        <input type="radio" id="berries" name="flavour" value="BERRY">
+        <label for="berries"> Berries 🍓</label>
+        <input type="radio" id="cheese" name="flavour" value="CHEESE">
+        <label for="cheese"> Cheese 🧀</label>
+        <input type="radio" id="peanut" name="flavour" value="PEANUT">
+        <label for="peanut"> Peanut 🥜</label>
+      </div>
+      <textarea disabled id="py_output"></textarea>
+    <div id="graph-area"></div>
+</body>
+
+<script src="js/app.js"></script>
+</html>
