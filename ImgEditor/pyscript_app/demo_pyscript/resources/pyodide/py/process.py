@@ -5,8 +5,6 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 from matplotlib import pyplot as plt
-import plotly.express as px
-from plotly.subplots import make_subplots
 
 class MyApp(object):
     def __init__(self) -> None:
@@ -19,34 +17,47 @@ class MyApp(object):
         # self.diff_img = compare(self.ref_img, self.test_img)
         self.diff_img = segment_graphcut(self.ref_img)
     def plot(self):
-        fig, axes = plt.subplots(2,2,sharex=True, sharey=True)
-        if self.ref_img is not None: 
+        # fig = self.plot_plotly()
+        # fig = self.plot_mpl()
+        fig = None
+        return fig
+
+    def plot_mpl(self):
+        fig, axes = plt.subplots(2,2,sharex=True, sharey=True, num="1")
+        if self.ref_img is not None:
+            LOGGER.info(self.ref_img.shape)
             axes[0,0].imshow(self.ref_img)
             axes[0,0].set_title('ref')
+            self.H, self.W = self.ref_img.shape
+        else:
+            LOGGER.info("self.ref_img is None")
+            
         if self.test_img is not None:
+            LOGGER.info(self.test_img.shape)
             axes[0,1].imshow(self.test_img)
-            axes[0,1].set_title('test')
+        else:
+            LOGGER.info("self.test_img is None")
+            
+            axes[0,1].imshow(np.ones((self.H, self.W)))
+        axes[0,1].set_title('test')
+
         if self.base_img is not None:
             axes[1,0].imshow(self.base_img)
-            axes[1,0].set_title('base')
+        else:
+            axes[1,0].imshow(np.ones((self.H, self.W)))
+        axes[1,0].set_title('base')
         if self.diff_img is not None:
             axes[1,1].imshow(self.diff_img)
-            axes[1,1].set_title('diff')
-        return fig
-    
-    def plot_plotly(self):
-        fig = make_subplots(rows=2, cols=2, shared_xaxes=True, shared_yaxes=True)
-        imgs, titles = [],[]
-        if self.ref_img is not None: 
-            fig.add_trace(px.imshow(self.ref_img, title="ref"), row=1, col=1)
-        if self.test_img is not None: 
-            fig.add_trace(px.imshow(self.test_img, title="test"), row=1, col=1)
-        if self.base_img is not None: 
-            fig.add_trace(px.imshow(self.base_img, title="base"), row=1, col=1)
-        if self.diff_img is not None: 
-            fig.add_trace(px.imshow(self.diff_img, title="diff"), row=1, col=1)
+        else:
+            axes[1,1].imshow(np.ones((self.H, self.W)))
+        axes[1,1].set_title('diff')
 
-        return fig
+        # fig = plt.figure(1)
+        # plt.imshow(self.ref_img)
+        plt.show()
+        # return fig
+        pass
+    
     
 def compare(img1:np.ndarray, img2:np.ndarray)->np.ndarray:
     LOGGER.info(f'got images with size {img1.shape} {img2.shape}')

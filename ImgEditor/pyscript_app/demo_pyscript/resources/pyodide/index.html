@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/pyscript.css" />
+    <script defer src="./js/pyscript.js"></script>
+</head>
+
+<body>
+    <py-config type="json">
+        {
+            "interpreters":[{
+                "src":"./pyodide.js",
+                "name":"pyodide-0.23.1",
+                "lang":"python"
+            }],
+            "packages" : ["matplotlib", "pandas","numpy","opencv-python"],
+            "fetch":[{
+                "from":"./py",
+                "files":["process.py","app.py"]
+            }],
+            "terminal":true
+        }
+    </py-config>
+
+    <section class="pyscript">
+        <label for="ref-file-upload-pillow">Upload a PNG image Ref</label></label><input type="file" id="ref-file-upload-pillow">
+        <label for="test-file-upload-pillow">Upload a PNG image Test</label><input type="file" id="test-file-upload-pillow">
+        <label for="base-file-upload-pillow">Upload a PNG image Base</label><input type="file" id="base-file-upload-pillow">
+        <button id="run">Run</button>
+        <div id="output_upload_pillow"></div>
+        <py-script src="./py/app.py"></py-script>
+    </section>
+
+    <script>
+        function logFromPython(){
+            pyscript.interpreter.run(`
+                import matplotlib
+                matplotlib.use("module://matplotlib_pyodide.html5_canvas_backend")
+                def demo_mpl(delta):
+                    import matplotlib.cm as cm
+                    from matplotlib import pyplot as plt
+                    x = y = np.arange(-3.0, 3.0, delta)
+                    X, Y = np.meshgrid(x, y)
+                    Z1 = np.exp(-(X**2) - Y**2)
+                    Z2 = np.exp(-((X - 1) ** 2) - (Y - 1) ** 2)
+                    Z = (Z1 - Z2) * 2
+                    plt.figure(1)
+                    plt.imshow(
+                    Z,
+                    interpolation="bilinear",
+                    cmap=cm.RdYlGn,
+                    origin="lower",
+                    extent=[-3, 3, -3, 3],
+                    vmax=abs(Z).max(),
+                    vmin=-abs(Z).max(),
+                    )
+                    plt.show()
+                    pass
+
+                # demo_mpl(delta)
+                # delta += 0.025
+                myApp.plot_mpl()
+            `)
+        }
+    </script>
+    <button onclick="logFromPython()">Click Me to Run Some Python</button>
+    
+</body>
+
+</html>
