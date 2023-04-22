@@ -6,6 +6,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 from matplotlib import pyplot as plt
 import plotly.express as px
+from plotly.subplots import make_subplots
 
 class MyApp(object):
     def __init__(self) -> None:
@@ -34,24 +35,17 @@ class MyApp(object):
         return fig
     
     def plot_plotly(self):
+        fig = make_subplots(rows=2, cols=2, shared_xaxes=True, shared_yaxes=True)
         imgs, titles = [],[]
         if self.ref_img is not None: 
-            imgs.append(self.ref_img)
-            titles.append('ref')
+            fig.add_trace(px.imshow(self.ref_img, title="ref"), row=1, col=1)
         if self.test_img is not None: 
-            imgs.append(self.test_img)
-            titles.append('test')
+            fig.add_trace(px.imshow(self.test_img, title="test"), row=1, col=1)
         if self.base_img is not None: 
-            imgs.append(self.base_img)
-            titles.append('base')
+            fig.add_trace(px.imshow(self.base_img, title="base"), row=1, col=1)
         if self.diff_img is not None: 
-            imgs.append(self.diff_img)
-            titles.append('diff')
+            fig.add_trace(px.imshow(self.diff_img, title="diff"), row=1, col=1)
 
-        fig = px.imshow(np.array(imgs))
-        # Set facet titles
-        for i, sigma in enumerate(titles):
-            fig.layout.annotations[i]['text'] = titles[i]
         return fig
     
 def compare(img1:np.ndarray, img2:np.ndarray)->np.ndarray:

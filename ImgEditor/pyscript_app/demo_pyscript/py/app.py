@@ -22,8 +22,8 @@ def plot_mpl(fig, ele_id):
     pass
 
 def plot(fig, ele_id):
-    # plot_plotly(fig, ele_id)
-    plot_mpl(fig, ele_id)
+    plot_plotly(fig, ele_id)
+    # plot_mpl(fig, ele_id)
 
 async def _upload_ref(e):
     print('upload ref')
