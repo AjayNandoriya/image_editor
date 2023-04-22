@@ -72,7 +72,9 @@ async def _upload_base(e):
     
 
 async def _run(e):
+    LOGGER.info('starting run.')
     myApp.run()
+    LOGGER.info('done.')
     # display(myApp.plot(), target="output_upload_pillow", append=False)
 
     # fig = myApp.plot()
