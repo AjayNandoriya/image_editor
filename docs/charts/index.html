@@ -6,21 +6,29 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <script src="https://cdn.plot.ly/plotly-2.20.0.min.js" charset="utf-8"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js@2.23.2/dist/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/index.min.js"></script> -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+    <script crossorigin src="https://unpkg.com/react-plotly.js@1.0.2/dist/create-plotly-component.js"></script>
 </head>
 
 <body>
     <div id="app">
-    <input type="checkbox" name="data1" id="data1">data1</input>
-    <input type="checkbox" name="data2" id="data2_ck">data2</input>
-    <div id="time_chart"></div>
-</div>
+        <input type="checkbox" name="data1" id="data1">data1</input>
+        <input type="checkbox" name="data2" id="data2_ck">data2</input>
+        <div id="time_chart"></div>
+        <div id="root"></div>
+    </div>
 </body>
-
-<script>
+<!-- <script src="./js/app.js"/> -->
+<script type="text/javascript">
 
     function draw_time_chart() {
+
         let trace1 = {
             x: ['2013-10-04 22:23:00', '2013-11-04 22:23:00', '2013-12-04 22:23:00'],
             y: [1, 4, 3],
@@ -41,22 +49,23 @@
 
         let layout = {
             title: 'Line and Scatter Plot',
-            xaxis:{
-                title:"time -->",
-                showgrid:true,
+            xaxis: {
+                title: "time -->",
+                showgrid: true,
 
             },
-            yaxis:{
-                title:"value",
+            yaxis: {
+                title: "value",
 
             }
         };
 
-        Plotly.newPlot('time_chart', data, layout, {scrollZoom:true});
+        Plotly.newPlot('time_chart', data, layout, { scrollZoom: true });
 
     }
 
     draw_time_chart();
 </script>
+<script type="text/babel" src="./js/app.js" />
 
 </html>

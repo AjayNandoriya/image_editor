@@ -1,0 +1,4 @@
+id,category1,category2,category3,timestamp,index1,index2
+abc1,level1_1,level2_1,level3_1,2023-05-01 10:00:00,0.1,0.001
+abc2,level1_1,level2_1,level3_2,2023-05-01 11:00:00,0.001,0.0005
+abc3,level1_1,level2_1,level3_3,2023-05-02 14:00:00,0.0021,-0.002
