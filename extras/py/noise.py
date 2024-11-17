@@ -3,13 +3,17 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-def create_img(H,W):
-    P = H//8
-    C = P//2
+def create_img(H,W, P=32, C=16):
+    # P = 32 #H//8
+    # C = P//2
     img = np.zeros([H,W], dtype=np.float32)
+    Ci = int(C)
+    Cd= C-Ci
     for y1 in range(P//4, H, P):
-        y2 = min(y1+C, H)
+        y2 = min(y1+Ci, H)
         img[y1:y2,:] = 1.0
+        if y2<H and Cd>0:
+            img[y2+1,:] = Cd
     return img
 
 def add_noise(img, offset_sigma:float=0.1, scale_sigma:float=0.0):
@@ -52,6 +56,46 @@ def test_gaussian_kernel():
     pass
 
 @jit
+def gaussian_filter_windowed(img_padded:np.ndarray, sigma_s:float, window_size:int):
+    """
+    Applies a bilateral filter to the input image with a windowed kernel.
+
+    Args:
+        img: The input image as a NumPy array.
+        sigma_s: Standard deviation for spatial kernel.
+        sigma_r: Standard deviation for range kernel.
+        window_size: Size of the square window for filtering.
+
+    Returns:
+        The filtered image.
+    """
+
+    height, width = img_padded.shape[:2]
+    height, width = height - window_size + 1, width - window_size + 1
+    filtered_img = np.zeros((height, width), dtype=img_padded.dtype)
+    half_window = window_size // 2
+
+    
+    spatial_weights = gaussian_kernel(window_size, sigma_s)
+    for i0 in range(height):
+        for i1 in range(width):
+            # Calculate spatial weights within the window
+
+            img_clip = img_padded[i0:i0 + window_size, i1:i1 + window_size]
+            
+            # Calculate range weights within the window
+            # intensity_diff = img_clip - img_padded[i0 + half_window, i1 + half_window]  
+            # range_weights = np.exp(-intensity_diff**2 / (2 * sigma_r**2))
+
+            weights = spatial_weights
+            weights /= np.sum(weights)
+
+            filtered_img[i0, i1] = np.sum(weights * img_clip)
+
+    return filtered_img
+
+
+@jit
 def bilateral_filter_windowed(img_padded:np.ndarray, sigma_s:float, sigma_r:float, window_size:int):
     """
     Applies a bilateral filter to the input image with a windowed kernel.
@@ -82,7 +126,8 @@ def bilateral_filter_windowed(img_padded:np.ndarray, sigma_s:float, sigma_r:floa
             # Calculate range weights within the window
             intensity_diff = img_clip - img_padded[i0 + half_window, i1 + half_window]  
             range_weights = np.exp(-intensity_diff**2 / (2 * sigma_r**2))
-
+            range_weights /= np.sum(range_weights) 
+            
             weights = spatial_weights * range_weights
             weights /= np.sum(weights)
 
@@ -124,7 +169,7 @@ def bilateral_scaled_filter_windowed(img_padded:np.ndarray, sigma_s:float, sigma
             intensity_diff = img_clip - ref_intensity  
             sigma_r = sigma_r0 + sigma_r1*ref_intensity
             range_weights = np.exp(-intensity_diff**2 / (2 * sigma_r**2))
-
+            range_weights /= np.sum(range_weights) 
             weights = spatial_weights * range_weights
             weights /= np.sum(weights)
 
@@ -144,41 +189,44 @@ def filter_noise(img):
     return img
 
 def test_add_noise_filter():
-    H,W = 128, 128
+    H,W = 64, 64
     NC = 2
 
     # filter
     window_size = 7
     sigma_s = 1
-    sigma_r = 5*10
-    sigma_r1 = 10*(25-5)/(5*255)
+    sigma_r = 5
+    sigma_r1 = (15-5)/(255)
 
     half_window = window_size//2
-    img = create_img(H,W)*255
-
-    img = cv2.GaussianBlur(img, (7,7), 0)
-    imgs = []
+    nimgs = []
     fimgs1 = []
     fimgs2 = []
+    fimgs3 = []
     for i in range(NC):
+        img = create_img(H,W, C=16+i*0.2)*255
+        img = cv2.GaussianBlur(img, (7,7), 0)
+    
         nimg = add_noise(img, 5, 15)
-        imgs.append(nimg)
+        nimgs.append(nimg)
         img_padded = np.pad(nimg, half_window, mode='symmetric')
 
         fimg1 = bilateral_filter_windowed(img_padded, sigma_s, sigma_r, window_size)
         fimgs1.append(fimg1)
         fimg2 = bilateral_scaled_filter_windowed(img_padded, sigma_s, sigma_r, sigma_r1, window_size)
         fimgs2.append(fimg2)
+        fimg3 = gaussian_filter_windowed(img_padded, sigma_s, window_size)
+        fimgs3.append(fimg3)
 
 
-    fig,axs = plt.subplots(3,4,sharex=True, sharey=True)
+    fig,axs = plt.subplots(4,4,sharex=True, sharey=True)
     vmax = 40
     for ic in range(NC):
-        axs[0,ic].imshow(imgs[ic])
+        axs[0,ic].imshow(nimgs[ic])
         axs[1,ic].set_title(f'ori-{ic}')
-    axs[0,2].imshow(imgs[1]-imgs[0], vmin=-vmax, vmax=vmax)
+    axs[0,2].imshow(nimgs[1]-nimgs[0], vmin=-vmax, vmax=vmax)
     axs[0,2].set_title(f'ori diff')
-    axs[0,3].imshow((imgs[1]-imgs[0])/((imgs[1]+imgs[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
+    axs[0,3].imshow((nimgs[1]-nimgs[0])/((nimgs[1]+nimgs[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
     axs[0,3].set_title(f'ori diff norm')
     for ic in range(NC):
         axs[1,ic].imshow(fimgs1[ic])
@@ -197,6 +245,16 @@ def test_add_noise_filter():
     
     axs[2,3].imshow((fimgs2[1]-fimgs2[0])/((fimgs2[1]+fimgs2[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
     axs[2,3].set_title(f'bilateral-1 diff norm')
+    
+
+    for ic in range(NC):
+        axs[3,ic].imshow(fimgs3[ic])
+        axs[3,ic].set_title(f'gaussian-{ic}')
+    axs[3,2].imshow(fimgs3[1]-fimgs3[0], vmin=-vmax, vmax=vmax)
+    axs[3,2].set_title(f'gaussian diff')
+    
+    axs[3,3].imshow((fimgs3[1]-fimgs3[0])/((fimgs3[1]+fimgs3[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
+    axs[3,3].set_title(f'gaussian diff norm')
     
     plt.show()
     pass
