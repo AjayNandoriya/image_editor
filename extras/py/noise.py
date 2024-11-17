@@ -148,7 +148,7 @@ def test_add_noise_filter():
     NC = 2
 
     # filter
-    window_size = 5
+    window_size = 7
     sigma_s = 1
     sigma_r = 5*10
     sigma_r1 = 10*(25-5)/(5*255)
@@ -171,17 +171,32 @@ def test_add_noise_filter():
         fimgs2.append(fimg2)
 
 
-    fig,axs = plt.subplots(3,3,sharex=True, sharey=True)
+    fig,axs = plt.subplots(3,4,sharex=True, sharey=True)
     vmax = 40
     for ic in range(NC):
         axs[0,ic].imshow(imgs[ic])
+        axs[1,ic].set_title(f'ori-{ic}')
     axs[0,2].imshow(imgs[1]-imgs[0], vmin=-vmax, vmax=vmax)
+    axs[0,2].set_title(f'ori diff')
+    axs[0,3].imshow((imgs[1]-imgs[0])/((imgs[1]+imgs[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
+    axs[0,3].set_title(f'ori diff norm')
     for ic in range(NC):
         axs[1,ic].imshow(fimgs1[ic])
+        axs[1,ic].set_title(f'bilateral-{ic}')
     axs[1,2].imshow(fimgs1[1]-fimgs1[0], vmin=-vmax, vmax=vmax)
+    axs[1,2].set_title(f'bilateral diff')
+    
+    axs[1,3].imshow((fimgs1[1]-fimgs1[0])/((fimgs1[1]+fimgs1[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
+    axs[1,3].set_title(f'bilateral diff norm')
+    
     for ic in range(NC):
         axs[2,ic].imshow(fimgs2[ic])
+        axs[1,ic].set_title(f'bilateral0 -{ic}')
     axs[2,2].imshow(fimgs2[1]-fimgs2[0], vmin=-vmax, vmax=vmax)
+    axs[2,2].set_title(f'bilateral-1 diff')
+    
+    axs[2,3].imshow((fimgs2[1]-fimgs2[0])/((fimgs2[1]+fimgs2[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
+    axs[2,3].set_title(f'bilateral-1 diff norm')
     
     plt.show()
     pass
