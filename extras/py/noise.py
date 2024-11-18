@@ -72,28 +72,61 @@ def gaussian_filter_windowed(img_padded:np.ndarray, sigma_s:float, window_size:i
 
     height, width = img_padded.shape[:2]
     height, width = height - window_size + 1, width - window_size + 1
-    filtered_img = np.zeros((height, width), dtype=img_padded.dtype)
+    filtered_img = np.empty((height, width), dtype=img_padded.dtype)
     half_window = window_size // 2
 
     
     spatial_weights = gaussian_kernel(window_size, sigma_s)
+    weights = spatial_weights
+    
     for i0 in range(height):
         for i1 in range(width):
             # Calculate spatial weights within the window
 
             img_clip = img_padded[i0:i0 + window_size, i1:i1 + window_size]
             
-            # Calculate range weights within the window
-            # intensity_diff = img_clip - img_padded[i0 + half_window, i1 + half_window]  
-            # range_weights = np.exp(-intensity_diff**2 / (2 * sigma_r**2))
-
-            weights = spatial_weights
-            weights /= np.sum(weights)
-
             filtered_img[i0, i1] = np.sum(weights * img_clip)
 
     return filtered_img
 
+@jit
+def gaussian_unfilter_windowed(img_padded:np.ndarray, sigma_s:float, window_size:int):
+    """
+    Applies a bilateral filter to the input image with a windowed kernel.
+
+    Args:
+        img: The input image as a NumPy array.
+        sigma_s: Standard deviation for spatial kernel.
+        sigma_r: Standard deviation for range kernel.
+        window_size: Size of the square window for filtering.
+
+    Returns:
+        The filtered image.
+    """
+
+    height, width = img_padded.shape[:2]
+    height, width = height - window_size + 1, width - window_size + 1
+    filtered_img = np.empty((height, width), dtype=img_padded.dtype)
+    half_window = window_size // 2
+
+    
+    spatial_weights = gaussian_kernel(window_size, sigma_s)
+    weights = spatial_weights
+    weights /= np.sum(weights)
+    
+    w = weights[half_window,half_window]
+    weights *= -1
+    weights[half_window,half_window] = 1.0 + 1 - w
+
+    for i0 in range(height):
+        for i1 in range(width):
+            # Calculate spatial weights within the window
+
+            img_clip = img_padded[i0:i0 + window_size, i1:i1 + window_size]
+            
+            filtered_img[i0, i1] = np.sum(weights * img_clip)
+
+    return filtered_img
 
 @jit
 def bilateral_filter_windowed(img_padded:np.ndarray, sigma_s:float, sigma_r:float, window_size:int):
@@ -112,7 +145,7 @@ def bilateral_filter_windowed(img_padded:np.ndarray, sigma_s:float, sigma_r:floa
 
     height, width = img_padded.shape[:2]
     height, width = height - window_size + 1, width - window_size + 1
-    filtered_img = np.zeros((height, width), dtype=img_padded.dtype)
+    filtered_img = np.empty((height, width), dtype=img_padded.dtype)
     half_window = window_size // 2
 
     
@@ -153,10 +186,8 @@ def bilateral_scaled_filter_windowed(img_padded:np.ndarray, sigma_s:float, sigma
 
     height, width = img_padded.shape[:2]
     height, width = height-window_size+1, width -window_size+1
-    filtered_img = np.zeros((height, width), dtype=img_padded.dtype)
+    filtered_img = np.empty((height, width), dtype=img_padded.dtype)
     half_window = window_size // 2
-
-    # img_padded = np.pad(img, half_window, mode='symmetric')
 
     spatial_weights = gaussian_kernel(window_size, sigma_s)
     for i0 in range(height):
@@ -199,63 +230,62 @@ def test_add_noise_filter():
     sigma_r1 = (15-5)/(255)
 
     half_window = window_size//2
+    imgs = []
     nimgs = []
     fimgs1 = []
     fimgs2 = []
     fimgs3 = []
+    fimgs4 = []
     for i in range(NC):
         img = create_img(H,W, C=16+i*0.2)*255
         img = cv2.GaussianBlur(img, (7,7), 0)
-    
+        imgs.append(img)
         nimg = add_noise(img, 5, 15)
         nimgs.append(nimg)
         img_padded = np.pad(nimg, half_window, mode='symmetric')
 
-        fimg1 = bilateral_filter_windowed(img_padded, sigma_s, sigma_r, window_size)
+        fimg1 = bilateral_filter_windowed(img_padded, 10, sigma_r, window_size)
         fimgs1.append(fimg1)
-        fimg2 = bilateral_scaled_filter_windowed(img_padded, sigma_s, sigma_r, sigma_r1, window_size)
+        fimg2 = bilateral_scaled_filter_windowed(img_padded, 10, sigma_r, sigma_r1, window_size)
         fimgs2.append(fimg2)
         fimg3 = gaussian_filter_windowed(img_padded, sigma_s, window_size)
         fimgs3.append(fimg3)
+        fimg3_padded = np.pad(fimg3, half_window, mode='symmetric')
+        fimg4 = gaussian_unfilter_windowed(fimg3_padded, sigma_s, window_size)
+        fimgs4.append(fimg4)
 
+    data = {'ori':imgs,
+            'noise':nimgs,
+            'gaussian':fimgs3,
+            # 'gaussian2':fimgs4,
+            'bilateral':fimgs1,
+            'bilateral-1':fimgs2}
 
-    fig,axs = plt.subplots(4,4,sharex=True, sharey=True)
+    fig,axs = plt.subplots(len(data)+1,4,sharex=True, sharey=True)
+    fig, axs2 = plt.subplots(2,1, sharex=True)
     vmax = 40
-    for ic in range(NC):
-        axs[0,ic].imshow(nimgs[ic])
-        axs[1,ic].set_title(f'ori-{ic}')
-    axs[0,2].imshow(nimgs[1]-nimgs[0], vmin=-vmax, vmax=vmax)
-    axs[0,2].set_title(f'ori diff')
-    axs[0,3].imshow((nimgs[1]-nimgs[0])/((nimgs[1]+nimgs[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
-    axs[0,3].set_title(f'ori diff norm')
-    for ic in range(NC):
-        axs[1,ic].imshow(fimgs1[ic])
-        axs[1,ic].set_title(f'bilateral-{ic}')
-    axs[1,2].imshow(fimgs1[1]-fimgs1[0], vmin=-vmax, vmax=vmax)
-    axs[1,2].set_title(f'bilateral diff')
-    
-    axs[1,3].imshow((fimgs1[1]-fimgs1[0])/((fimgs1[1]+fimgs1[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
-    axs[1,3].set_title(f'bilateral diff norm')
-    
-    for ic in range(NC):
-        axs[2,ic].imshow(fimgs2[ic])
-        axs[1,ic].set_title(f'bilateral0 -{ic}')
-    axs[2,2].imshow(fimgs2[1]-fimgs2[0], vmin=-vmax, vmax=vmax)
-    axs[2,2].set_title(f'bilateral-1 diff')
-    
-    axs[2,3].imshow((fimgs2[1]-fimgs2[0])/((fimgs2[1]+fimgs2[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
-    axs[2,3].set_title(f'bilateral-1 diff norm')
-    
 
-    for ic in range(NC):
-        axs[3,ic].imshow(fimgs3[ic])
-        axs[3,ic].set_title(f'gaussian-{ic}')
-    axs[3,2].imshow(fimgs3[1]-fimgs3[0], vmin=-vmax, vmax=vmax)
-    axs[3,2].set_title(f'gaussian diff')
-    
-    axs[3,3].imshow((fimgs3[1]-fimgs3[0])/((fimgs3[1]+fimgs3[0])/(2*255) + 1), vmin=-vmax, vmax=vmax)
-    axs[3,3].set_title(f'gaussian diff norm')
-    
+    for ikey, key in enumerate(data.keys()):
+        diff_img = data[key][1]- data[key][0]
+        avg_img = (data[key][1]+data[key][0])/(2*255) + 1
+        
+        for ic in range(NC):
+            axs[ikey,ic].imshow(data[key][ic])
+            axs[ikey,ic].set_title(f'{key}-{ic}')
+        axs[ikey,2].imshow(diff_img, vmin=-vmax, vmax=vmax)
+        axs[ikey,2].set_title(f'{key} diff')
+        axs[ikey,3].imshow(diff_img/avg_img, vmin=-vmax, vmax=vmax)
+        axs[ikey,3].set_title(f'{key} diff norm')
+
+        # axs2[0].plot(np.mean(diff_img,axis=1), label=key)
+        # axs2[1].plot(np.mean(diff_img/avg_img,axis=1), label=key)
+        axs2[0].plot(diff_img[:,10], label=key)
+        axs2[1].plot(diff_img[:,10]/avg_img[:,10], label=key)
+        pass
+    axs2[0].grid()
+    axs2[0].legend()
+    axs2[1].grid()
+    axs2[1].legend()
     plt.show()
     pass
 
