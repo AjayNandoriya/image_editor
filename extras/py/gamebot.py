@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 import keyboard
 
+#https://www.addictinggames.com/clicker/helicopter-game
 
 class Helicopter(object):
     def __init__(self):
